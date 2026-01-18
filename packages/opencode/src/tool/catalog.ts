@@ -91,4 +91,16 @@ export namespace ToolCatalog {
   export function get(id: string): CatalogEntry | undefined {
     return catalog.find((e) => e.id === id)
   }
+
+  export function searchRegex(pattern: string, opts?: { limit?: number; source?: string }): CatalogEntry[] {
+    if (catalog.length === 0) return []
+    const regex = new RegExp(pattern, "i")
+    const limit = opts?.limit ?? 5
+    return catalog
+      .filter((entry) => {
+        if (opts?.source && entry.source !== opts.source) return false
+        return regex.test(entry.name) || regex.test(entry.description)
+      })
+      .slice(0, limit)
+  }
 }
