@@ -104,6 +104,7 @@ export const layer = Layer.effect(
     const summary = yield* SessionSummary.Service
     const sys = yield* SystemPrompt.Service
     const llm = yield* LLM.Service
+    const config = yield* Config.Service
     const runner = Effect.fn("SessionPrompt.runner")(function* () {
       return yield* EffectBridge.make()
     })
@@ -366,11 +367,10 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       const run = yield* runner()
       const promptOps = yield* ops()
 
-      const discoveredToolIDs = Session.getDiscoveredTools(input.session.id)
-      const cfg = yield* Config.Service
-      const cfgInfo = yield* cfg.get()
+      const cfgInfo = yield* config.get()
       const toolSearchEnabled = cfgInfo.toolSearch?.enabled ?? true
       const alwaysLoad = new Set(cfgInfo.toolSearch?.alwaysLoad ?? [])
+      const discoveredToolIDs = yield* Effect.sync(() => Session.getDiscoveredTools(input.session.id))
 
       const context = (args: any, options: ToolExecutionOptions): Tool.Context => ({
         sessionID: input.session.id,
@@ -1710,6 +1710,7 @@ export const defaultLayer = Layer.suspend(() =>
         LLM.defaultLayer,
         Bus.layer,
         CrossSpawnSpawner.defaultLayer,
+        Config.defaultLayer,
       ),
     ),
   ),
