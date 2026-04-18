@@ -31,6 +31,23 @@ import { Effect, Layer, Option, Context } from "effect"
 
 const log = Log.create({ service: "session" })
 
+// In-memory tracking of discovered tools per session
+const discoveredToolsMap = new Map<string, Set<string>>()
+
+export function addDiscoveredTools(sessionID: string, toolIDs: string[]) {
+  if (!discoveredToolsMap.has(sessionID)) discoveredToolsMap.set(sessionID, new Set())
+  const set = discoveredToolsMap.get(sessionID)!
+  for (const id of toolIDs) set.add(id)
+}
+
+export function getDiscoveredTools(sessionID: string): Set<string> {
+  return discoveredToolsMap.get(sessionID) ?? new Set()
+}
+
+export function clearDiscoveredTools(sessionID: string) {
+  discoveredToolsMap.delete(sessionID)
+}
+
 const parentTitlePrefix = "New session - "
 const childTitlePrefix = "Child session - "
 
@@ -467,6 +484,7 @@ export const layer: Layer.Layer<Service, never, Bus.Service | Storage.Service> =
         yield* Effect.sync(() => {
           SyncEvent.run(Event.Deleted, { sessionID, info: session }, { publish: hasInstance })
           SyncEvent.remove(sessionID)
+          clearDiscoveredTools(sessionID)
         })
       } catch (e) {
         log.error(e)

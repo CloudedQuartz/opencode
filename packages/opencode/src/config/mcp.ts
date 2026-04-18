@@ -16,6 +16,9 @@ export class Local extends Schema.Class<Local>("McpLocalConfig")({
   timeout: Schema.optional(Schema.Number).annotate({
     description: "Timeout in ms for MCP server requests. Defaults to 5000 (5 seconds) if not specified.",
   }),
+  deferLoading: Schema.optional(Schema.Boolean).annotate({
+    description: "If true, tools from this server are deferred until discovered via tool_search. Defaults to true.",
+  }),
 }) {
   static readonly zod = zod(this)
 }
@@ -49,6 +52,9 @@ export class Remote extends Schema.Class<Remote>("McpRemoteConfig")({
   }),
   timeout: Schema.optional(Schema.Number).annotate({
     description: "Timeout in ms for MCP server requests. Defaults to 5000 (5 seconds) if not specified.",
+  }),
+  deferLoading: Schema.optional(Schema.Boolean).annotate({
+    description: "If true, tools from this server are deferred until discovered via tool_search. Defaults to true.",
   }),
 }) {
   static readonly zod = zod(this)

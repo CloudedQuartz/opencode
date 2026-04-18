@@ -222,6 +222,9 @@ export interface Interface {
   readonly status: () => Effect.Effect<Record<string, Status>>
   readonly clients: () => Effect.Effect<Record<string, MCPClient>>
   readonly tools: () => Effect.Effect<Record<string, Tool>>
+  readonly toolsMeta: () => Effect.Effect<
+    Record<string, Array<{ name: string; description: string; inputSchema: JSONSchema7 }>>
+  >
   readonly prompts: () => Effect.Effect<Record<string, PromptInfo & { client: string }>>
   readonly resources: () => Effect.Effect<Record<string, ResourceInfo & { client: string }>>
   readonly add: (name: string, mcp: ConfigMCP.Info) => Effect.Effect<{ status: Record<string, Status> | Status }>
@@ -665,6 +668,22 @@ export const layer = Layer.effect(
       return result
     })
 
+    const toolsMeta = Effect.fn("MCP.toolsMeta")(function* () {
+      const result: Record<string, Array<{ name: string; description: string; inputSchema: JSONSchema7 }>> = {}
+      const s = yield* InstanceState.get(state)
+      for (const [clientName] of Object.entries(s.clients)) {
+        if (s.status[clientName]?.status !== "connected") continue
+        const listed = s.defs[clientName]
+        if (!listed) continue
+        result[clientName] = listed.map((t) => ({
+          name: t.name,
+          description: t.description ?? "",
+          inputSchema: t.inputSchema as JSONSchema7,
+        }))
+      }
+      return result
+    })
+
     function collectFromConnected<T extends { name: string }>(
       s: State,
       listFn: (c: Client) => Promise<T[]>,
@@ -899,6 +918,7 @@ export const layer = Layer.effect(
       status,
       clients,
       tools,
+      toolsMeta,
       prompts,
       resources,
       add,

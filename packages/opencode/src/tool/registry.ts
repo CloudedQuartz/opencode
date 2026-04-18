@@ -12,6 +12,7 @@ import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
+import { ToolSearchTool } from "./tool-search"
 import * as Tool from "./tool"
 import { Config } from "../config"
 import { type ToolContext as PluginToolContext, type ToolDefinition } from "@opencode-ai/plugin"
@@ -97,6 +98,7 @@ export const layer: Layer.Layer<
     const truncate = yield* Truncate.Service
 
     const invalid = yield* InvalidTool
+    const toolSearch = yield* ToolSearchTool
     const task = yield* TaskTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
@@ -178,6 +180,7 @@ export const layer: Layer.Layer<
 
         const tool = yield* Effect.all({
           invalid: Tool.init(invalid),
+          toolSearch: Tool.init(toolSearch),
           bash: Tool.init(bash),
           read: Tool.init(read),
           glob: Tool.init(globtool),
@@ -200,6 +203,7 @@ export const layer: Layer.Layer<
           custom,
           builtin: [
             tool.invalid,
+            tool.toolSearch,
             ...(questionEnabled ? [tool.question] : []),
             tool.bash,
             tool.read,

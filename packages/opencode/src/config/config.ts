@@ -183,6 +183,22 @@ const InfoSchema = Schema.Struct({
       ]),
     ),
   ).annotate({ description: "MCP (Model Context Protocol) server configurations" }),
+  toolSearch: Schema.optional(
+    Schema.Struct({
+      enabled: Schema.optional(Schema.Boolean).annotate({
+        description: "Enable tool search feature. Defaults to true.",
+      }),
+      deferBuiltins: Schema.optional(Schema.mutable(Schema.Array(Schema.String))).annotate({
+        description: "Built-in tool IDs to defer",
+      }),
+      alwaysLoad: Schema.optional(Schema.mutable(Schema.Array(Schema.String))).annotate({
+        description: "Tool IDs to always load, never defer",
+      }),
+      searchLimit: Schema.optional(PositiveInt).annotate({
+        description: "Max results from tool_search. Defaults to 5.",
+      }),
+    }),
+  ).annotate({ description: "Tool search configuration for deferred tool loading" }),
   formatter: Schema.optional(ConfigFormatter.Info),
   lsp: Schema.optional(ConfigLSP.Info),
   instructions: Schema.optional(Schema.mutable(Schema.Array(Schema.String))).annotate({

@@ -195,6 +195,30 @@ const live: Layer.Layer<
 
       const tools = resolveTools(input)
 
+      if (!input.small) {
+        const systemChars = system.reduce((acc, s) => acc + s.length, 0)
+        const messagesChars = input.messages.reduce((acc, m) => {
+          if (typeof m.content === "string") return acc + m.content.length
+          if (Array.isArray(m.content))
+            return acc + m.content.reduce((a: number, p: any) => a + ("text" in p ? (p.text as string).length : 100), 0)
+          return acc
+        }, 0)
+        const toolsChars = Object.entries(tools).reduce(
+          (acc, [name, t]) =>
+            acc + name.length + (t.description?.length ?? 0) + JSON.stringify(t.inputSchema ?? {}).length,
+          0,
+        )
+        l.warn("context", {
+          estimatedTokens: Math.round((systemChars + messagesChars + toolsChars) / 4),
+          systemChars,
+          messagesChars,
+          toolsChars,
+          messageCount: input.messages.length,
+          toolCount: Object.keys(tools).length,
+          tools: Object.keys(tools),
+        })
+      }
+
       // LiteLLM and some Anthropic proxies require the tools parameter to be present
       // when message history contains tool calls, even if no tools are being used.
       // Add a dummy tool that is never called to satisfy this validation.

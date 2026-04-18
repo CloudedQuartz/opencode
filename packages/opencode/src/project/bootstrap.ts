@@ -11,6 +11,8 @@ import { Instance } from "./instance"
 import { Log } from "@/util"
 import { FileWatcher } from "@/file/watcher"
 import { ShareNext } from "@/share"
+import { ToolCatalog } from "../tool/catalog"
+import { MCP } from "../mcp"
 import * as Effect from "effect/Effect"
 import { Config } from "@/config"
 
@@ -37,6 +39,13 @@ export const InstanceBootstrap = Effect.gen(function* () {
       if (payload.properties.name === Command.Default.INIT) {
         Project.setInitialized(Instance.project.id)
       }
+    }),
+  )
+
+  yield* Effect.promise(() => ToolCatalog.init())
+  yield* Bus.Service.use((svc) =>
+    svc.subscribeCallback(MCP.ToolsChanged, async () => {
+      await ToolCatalog.rebuild()
     }),
   )
 }).pipe(Effect.withSpan("InstanceBootstrap"))

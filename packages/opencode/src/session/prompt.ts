@@ -30,7 +30,8 @@ import * as CrossSpawnSpawner from "@/effect/cross-spawn-spawner"
 import * as Stream from "effect/Stream"
 import { Command } from "../command"
 import { pathToFileURL, fileURLToPath } from "url"
-import { ConfigMarkdown } from "../config"
+import { ConfigMarkdown, Config } from "../config"
+import { ToolCatalog } from "../tool/catalog"
 import { SessionSummary } from "./summary"
 import { NamedError } from "@opencode-ai/shared/util/error"
 import { SessionProcessor } from "./processor"
@@ -365,6 +366,12 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       const run = yield* runner()
       const promptOps = yield* ops()
 
+      const discoveredToolIDs = Session.getDiscoveredTools(input.session.id)
+      const cfg = yield* Config.Service
+      const cfgInfo = yield* cfg.get()
+      const toolSearchEnabled = cfgInfo.toolSearch?.enabled ?? true
+      const alwaysLoad = new Set(cfgInfo.toolSearch?.alwaysLoad ?? [])
+
       const context = (args: any, options: ToolExecutionOptions): Tool.Context => ({
         sessionID: input.session.id,
         abort: options.abortSignal!,
@@ -403,6 +410,9 @@ NOTE: At any point in time through this workflow you should feel free to ask the
         providerID: input.model.providerID,
         agent: input.agent,
       })) {
+        const catalogEntry = ToolCatalog.get(item.id)
+        const isDeferred = catalogEntry?.deferLoading ?? false
+        if (toolSearchEnabled && isDeferred && !discoveredToolIDs.has(item.id) && !alwaysLoad.has(item.id)) continue
         const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))
         tools[item.id] = tool({
           description: item.description,
@@ -442,6 +452,9 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       }
 
       for (const [key, item] of Object.entries(yield* mcp.tools())) {
+        const mcpCatalogEntry = ToolCatalog.get(key)
+        const mcpIsDeferred = mcpCatalogEntry?.deferLoading ?? true // MCP defaults to deferred
+        if (toolSearchEnabled && mcpIsDeferred && !discoveredToolIDs.has(key) && !alwaysLoad.has(key)) continue
         const execute = item.execute
         if (!execute) continue
 
