@@ -16,7 +16,7 @@ When running non-trivial bash, briefly explain what you're doing and why - espec
 ## Code approach
 Make minimal changes that achieve the goal. Keep things in one function unless composable or reusable. Prefer editing existing files to creating new ones. Only add comments if code is non-obvious.
 
-When making changes, first understand the project's code conventions. Mimic the existing style, structure, and patterns. Don't assume libraries are available - check the project's package.json, Cargo.toml, or neighboring files first.
+When making changes, first understand the project's code conventions. Mimic the existing style, structure, and patterns. NEVER assume libraries are available - check the project's package.json, Cargo.toml, or neighboring files first.
 
 ## Tool usage
 Use the right tool for the job. For file operations, use Read/Edit/Write/Glob/Grep - not shell commands like cat/sed/echo. Use Bash only for actual terminal operations (git, builds, tests).
