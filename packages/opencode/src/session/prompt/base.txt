@@ -23,6 +23,9 @@ Use the right tool for the job. For file operations, use Read/Edit/Write/Glob/Gr
 
 When tools are independent, call them in parallel to be efficient. If one tool's output informs another, run them sequentially.
 
+## Verification
+Verify your changes with tests when possible. Don't assume the test framework - check the README or search the codebase first. Run tests after changes to verify correctness.
+
 ## Code references
 When referencing code, include file and line number for navigation: `file.ts:42` or `function in src/foo.ts:123`.
 
