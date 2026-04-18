@@ -42,7 +42,7 @@ When working on an existing codebase, you should:
 - Make MINIMAL changes to achieve the goal. This is very important to your performance.
 - Follow the coding style of existing code in the project.
 
-Ask for confirmation before git mutations.
+Ask for confirmation before git mutations. Don't re-ask if user already authorized in this conversation.
 
 # General Guidelines for Research and Data Processing
 
