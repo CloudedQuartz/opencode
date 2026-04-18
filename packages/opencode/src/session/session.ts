@@ -31,17 +31,30 @@ import { Effect, Layer, Option, Context } from "effect"
 
 const log = Log.create({ service: "session" })
 
-// In-memory tracking of discovered tools per session
-const discoveredToolsMap = new Map<string, Set<string>>()
+// In-memory tracking of discovered tools per session: tool ID -> turns remaining (0 = infinite/pinned)
+const discoveredToolsMap = new Map<string, Map<string, number>>()
 
-export function addDiscoveredTools(sessionID: string, toolIDs: string[]) {
-  if (!discoveredToolsMap.has(sessionID)) discoveredToolsMap.set(sessionID, new Set())
-  const set = discoveredToolsMap.get(sessionID)!
-  for (const id of toolIDs) set.add(id)
+export function addDiscoveredTools(sessionID: string, toolIDs: string[], maxTurns = 10) {
+  if (!discoveredToolsMap.has(sessionID)) discoveredToolsMap.set(sessionID, new Map())
+  const map = discoveredToolsMap.get(sessionID)!
+  for (const id of toolIDs) {
+    if (!map.has(id)) map.set(id, maxTurns)
+  }
 }
 
 export function getDiscoveredTools(sessionID: string): Set<string> {
-  return discoveredToolsMap.get(sessionID) ?? new Set()
+  return new Set(discoveredToolsMap.get(sessionID)?.keys() ?? [])
+}
+
+// Called once per assistant turn to decrement counters and evict expired tools
+export function tickDiscoveredTools(sessionID: string) {
+  const map = discoveredToolsMap.get(sessionID)
+  if (!map) return
+  for (const [id, turns] of map) {
+    if (turns === 0) continue // 0 = infinite (pinned)
+    if (turns === 1) map.delete(id)
+    else map.set(id, turns - 1)
+  }
 }
 
 export function clearDiscoveredTools(sessionID: string) {
@@ -88,6 +101,7 @@ export function fromRow(row: SessionRow): Info {
     share,
     revert,
     permission: row.permission ?? undefined,
+    pinned_tools: row.pinned_tools ?? undefined,
     time: {
       created: row.time_created,
       updated: row.time_updated,
@@ -114,6 +128,7 @@ export function toRow(info: Info) {
     summary_diffs: info.summary?.diffs,
     revert: info.revert ?? null,
     permission: info.permission,
+    pinned_tools: info.pinned_tools ?? null,
     time_created: info.time.created,
     time_updated: info.time.updated,
     time_compacting: info.time.compacting,
@@ -161,6 +176,7 @@ export const Info = z
       archived: z.number().optional(),
     }),
     permission: Permission.Ruleset.zod.optional(),
+    pinned_tools: z.array(z.string()).optional(),
     revert: z
       .object({
         messageID: MessageID.zod,
@@ -360,6 +376,7 @@ export interface Interface {
   readonly setTitle: (input: { sessionID: SessionID; title: string }) => Effect.Effect<void>
   readonly setArchived: (input: { sessionID: SessionID; time?: number }) => Effect.Effect<void>
   readonly setPermission: (input: { sessionID: SessionID; permission: Permission.Ruleset }) => Effect.Effect<void>
+  readonly setPinnedTools: (input: { sessionID: SessionID; tools: string[] }) => Effect.Effect<void>
   readonly setRevert: (input: {
     sessionID: SessionID
     revert: Info["revert"]
@@ -608,6 +625,13 @@ export const layer: Layer.Layer<Service, never, Bus.Service | Storage.Service> =
       yield* patch(input.sessionID, { permission: input.permission, time: { updated: Date.now() } })
     })
 
+    const setPinnedTools = Effect.fn("Session.setPinnedTools")(function* (input: {
+      sessionID: SessionID
+      tools: string[]
+    }) {
+      yield* patch(input.sessionID, { pinned_tools: input.tools, time: { updated: Date.now() } })
+    })
+
     const setRevert = Effect.fn("Session.setRevert")(function* (input: {
       sessionID: SessionID
       revert: Info["revert"]
@@ -697,6 +721,7 @@ export const layer: Layer.Layer<Service, never, Bus.Service | Storage.Service> =
       setTitle,
       setArchived,
       setPermission,
+      setPinnedTools,
       setRevert,
       clearRevert,
       setSummary,

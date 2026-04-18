@@ -370,6 +370,14 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       const cfgInfo = yield* config.get()
       const toolSearchEnabled = cfgInfo.toolSearch?.enabled ?? true
       const alwaysLoad = new Set(cfgInfo.toolSearch?.alwaysLoad ?? [])
+      const maxTurns = cfgInfo.toolSearch?.maxTurns ?? 10
+
+      // Restore pinned tools from DB (survive restarts), then tick expiry counters
+      if (input.session.pinned_tools?.length) {
+        yield* Effect.sync(() => Session.addDiscoveredTools(input.session.id, input.session.pinned_tools!, 0))
+      }
+      yield* Effect.sync(() => Session.tickDiscoveredTools(input.session.id))
+
       const discoveredToolIDs = yield* Effect.sync(() => Session.getDiscoveredTools(input.session.id))
 
       const context = (args: any, options: ToolExecutionOptions): Tool.Context => ({

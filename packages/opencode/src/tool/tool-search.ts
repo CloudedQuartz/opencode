@@ -3,6 +3,8 @@ import { Effect } from "effect"
 import * as Tool from "./tool"
 import { ToolCatalog } from "./catalog"
 import { Session } from "../session"
+import { Config } from "../config"
+import type { AppRuntime as AppRuntimeType } from "@/effect/app-runtime"
 
 export const ToolSearchTool = Tool.define(
   "tool_search",
@@ -23,12 +25,20 @@ How NOT to Use It:
     parameters: z.object({
       query: z.string().describe("Search query (keywords or patterns)"),
       category: z.enum(["all", "builtin", "mcp", "plugin"]).optional().describe("Filter by tool source"),
+      pin: z.boolean().optional().describe("Pin these tools permanently for this session so they never expire"),
     }),
 
-    execute(args: { query: string; category?: "all" | "builtin" | "mcp" | "plugin" }, ctx: Tool.Context) {
+    execute(args: { query: string; category?: "all" | "builtin" | "mcp" | "plugin"; pin?: boolean }, ctx: Tool.Context) {
       return Effect.promise(async () => {
+        // Dynamic import avoids circular module-init issue:
+        // app-runtime -> ToolRegistry -> tool-search -> app-runtime (broken at bundle init time with static import)
+        const { AppRuntime } = await import("@/effect/app-runtime") as { AppRuntime: typeof AppRuntimeType }
+        const cfgInfo = await AppRuntime.runPromise(Config.Service.use((s) => s.get()))
+        const maxTurns = args.pin ? 0 : (cfgInfo.toolSearch?.maxTurns ?? 10)
+        const limit = cfgInfo.toolSearch?.searchLimit ?? 5
+
         const results = ToolCatalog.search(args.query, {
-          limit: 5,
+          limit,
           source: args.category === "all" ? undefined : args.category,
         })
 
@@ -40,13 +50,17 @@ How NOT to Use It:
           }
         }
 
-        Session.addDiscoveredTools(
-          ctx.sessionID,
-          results.map((r) => r.id),
-        )
+        const toolIDs = results.map((r) => r.id)
+        Session.addDiscoveredTools(ctx.sessionID, toolIDs, maxTurns)
+
+        // Persist pinned tools to DB so they survive session restarts
+        if (args.pin) {
+          const session = await AppRuntime.runPromise(Session.Service.use((s) => s.get(ctx.sessionID)))
+          const merged = Array.from(new Set([...(session.pinned_tools ?? []), ...toolIDs]))
+          await AppRuntime.runPromise(Session.Service.use((s) => s.setPinnedTools({ sessionID: ctx.sessionID, tools: merged })))
+        }
 
         const toolNames = results.map((r) => r.id)
-
         return {
           title: `Found ${results.length} tools`,
           metadata: { query: args.query, count: results.length, tools: toolNames, displayOutput: toolNames.join("\n") },

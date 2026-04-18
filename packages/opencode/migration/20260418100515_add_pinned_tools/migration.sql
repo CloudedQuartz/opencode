@@ -1,0 +1,1 @@
+ALTER TABLE `session` ADD `pinned_tools` text;
