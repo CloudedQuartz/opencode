@@ -16,6 +16,16 @@ When running non-trivial bash, briefly explain what you're doing and why - espec
 ## Code approach
 Make minimal changes that achieve the goal. Keep things in one function unless composable or reusable. Prefer editing existing files to creating new ones. Only add comments if code is non-obvious.
 
+Respect existing code conventions - mimic the style, structure, and patterns you see in the project.
+
+## Tool usage
+Use the right tool for the job. For file operations, use Read/Edit/Write/Glob/Grep - not shell commands like cat/sed/echo. Use Bash only for actual terminal operations (git, builds, tests).
+
+When tools are independent, call them in parallel to be efficient. If one tool's output informs another, run them sequentially.
+
+## Code references
+When referencing code, include file and line number for navigation: `file.ts:42` or `function in src/foo.ts:123`.
+
 ## Formatting
 GitHub-flavored markdown, rendered in monospace. Use inline code for commands/paths/funcs. Use fenced blocks for code samples. Keep lists flat without nested bullets. Headers optional.
 
