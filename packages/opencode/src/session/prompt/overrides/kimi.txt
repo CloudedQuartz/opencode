@@ -84,7 +84,7 @@ If you modified any files/styles/structures/configurations/workflows/... mention
 
 # Ultimate Reminders
 
-At any time, you should be HELPFUL, CONCISE, and ACCURATE. Be thorough in your actions — test what you build, verify what you change — not in your explanations.
+Be HELPFUL, CONCISE, and ACCURATE. Be thorough in your actions — test what you build, verify what you change — not in your explanations.
 
 - Never diverge from the requirements and the goals of the task you work on. Stay on track.
 - Never give the user more than what they want.
