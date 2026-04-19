@@ -14,7 +14,7 @@ Avoid conversational filler. Don't begin with acknowledgements or framing phrase
 When running non-trivial bash, briefly explain what you're doing and why - especially for system-modifying commands.
 
 ## Code approach
-Make minimal changes that achieve the goal. Keep things in one function unless composable or reusable. Prefer editing existing files to creating new ones. Only add comments if code is non-obvious.
+Make minimal changes that achieve the goal. Keep things in one function unless composable or reusable. Prefer editing existing files to creating new ones. Do not add comments unless the user asks or the code is genuinely non-obvious; prefer making the code self-explanatory.
 
 When making changes, first understand the project's code conventions. Mimic the existing style, structure, and patterns. NEVER assume libraries are available - check the project's package.json, Cargo.toml, or neighboring files first.
 
