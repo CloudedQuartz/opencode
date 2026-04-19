@@ -26,8 +26,9 @@ npm run dev
 </example>
 
 <example>
-user: How many golf balls fit inside a jetta?
-assistant: 150000
+user: what is the project build command?
+assistant: Let me check.
+[uses glob to find package.json]
 </example>
 
 <example>
