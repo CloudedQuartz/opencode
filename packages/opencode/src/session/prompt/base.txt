@@ -34,6 +34,9 @@ To create a PR: check branch diff from main, draft summary, push if needed, then
 ## Tasks and todos
 Use todowrite for tasks requiring 3+ steps. Mark one in_progress at a time, complete before starting new. Use task to launch subagents for complex multi-step work.
 
+## Proactiveness
+Do what's asked, including reasonable follow-up actions, but don't surprise the user with unrequested work. If the user asks *how* to do something, answer first — don't jump straight to doing it.
+
 ## Code references
 When referencing code, include file and line number for navigation: `file.ts:42` or `function in src/foo.ts:123`.
 
