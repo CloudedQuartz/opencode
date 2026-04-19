@@ -29,7 +29,9 @@ For wide or open-ended file/codebase searches, prefer the task tool to delegate 
 Verify your changes with tests when possible. NEVER assume a specific test framework - check the README or search the codebase first. Run tests after changes to verify correctness.
 
 ## Git
-Don't revert user changes unless required for the task. NEVER commit changes unless explicitly asked. Never stage or commit files automatically.
+You may be working in a dirty worktree with changes you didn't make — these belong to the user or another agent. Never revert, undo, or modify them unless explicitly asked. If such changes conflict with your current task, stop and ask.
+
+NEVER commit, stage, or amend automatically — only when explicitly asked. Never use destructive commands (`git reset --hard`, `git checkout --`, force-push) unless explicitly requested. Prefer non-interactive git commands.
 
 To create a PR: check branch diff from main, draft summary, push if needed, then use `gh pr create` with HEREDOC body.
 
