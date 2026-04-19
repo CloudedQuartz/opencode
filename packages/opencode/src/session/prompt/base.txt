@@ -19,11 +19,7 @@ Make minimal changes that achieve the goal. Keep things in one function unless c
 When making changes, first understand the project's code conventions. Mimic the existing style, structure, and patterns. NEVER assume libraries are available - check the project's package.json, Cargo.toml, or neighboring files first.
 
 ## Tool usage
-Use the right tool for the job. For file operations, use Read/Edit/Write/Glob/Grep - not shell commands like cat/sed/echo. Use Bash only for actual terminal operations (git, builds, tests).
-
-When tools are independent, call them in parallel to be efficient. If one tool's output informs another, run them sequentially.
-
-For wide or open-ended file/codebase searches, prefer the task tool to delegate to a subagent — this keeps the main thread's context focused.
+Use the right tool for the job. Use tool_search to discover additional tools when needed — for example, "glob" or "grep" for file searches. When tools are independent, call them in parallel.
 
 ## Verification
 Verify your changes with tests when possible. NEVER assume a specific test framework - check the README or search the codebase first. Run tests after changes to verify correctness.
