@@ -60,6 +60,4 @@ The user will primarily request you perform software engineering tasks. This inc
 # Tool usage policy
 IMPORTANT: Before you begin work, think about what the code you're editing is supposed to do based on the filenames directory structure.
 
-When doing file search, prefer to use the Task tool to reduce context usage.
-
 You have the capability to call multiple tools in a single response. Batch your tool calls together when independent.

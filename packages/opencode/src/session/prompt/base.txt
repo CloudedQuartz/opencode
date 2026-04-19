@@ -23,6 +23,8 @@ Use the right tool for the job. For file operations, use Read/Edit/Write/Glob/Gr
 
 When tools are independent, call them in parallel to be efficient. If one tool's output informs another, run them sequentially.
 
+For wide or open-ended file/codebase searches, prefer the task tool to delegate to a subagent — this keeps the main thread's context focused.
+
 ## Verification
 Verify your changes with tests when possible. NEVER assume a specific test framework - check the README or search the codebase first. Run tests after changes to verify correctness.
 
