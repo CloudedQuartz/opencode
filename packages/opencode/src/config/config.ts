@@ -200,6 +200,9 @@ const InfoSchema = Schema.Struct({
       maxTurns: Schema.optional(NonNegativeInt).annotate({
         description: "Turns a discovered tool stays active before expiring. Defaults to 10. Set to 0 for no expiry.",
       }),
+      stubMaxTurns: Schema.optional(NonNegativeInt).annotate({
+        description: "Turns an auto-activated stub tool stays active before expiring. Defaults to 3. Set to 0 for no expiry.",
+      }),
     }),
   ).annotate({ description: "Tool search configuration for deferred tool loading" }),
   formatter: Schema.optional(ConfigFormatter.Info),

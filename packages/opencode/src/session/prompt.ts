@@ -352,6 +352,33 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       userMessage.parts.push(part)
       return input.messages
     })
+    const createActivationStub = (toolID: string, description: string, sessionID: string, stubMaxTurns: number) =>
+      tool({
+        description: `${description}\n\nACTIVATION REQUIRED: This tool is not yet active. Call tool_search with query="${toolID}" or tool_search_regex with pattern="${toolID}" and pin=true to activate it for this session.`,
+        inputSchema: jsonSchema({
+          type: "object",
+          properties: {},
+        }),
+        execute() {
+          // Auto-pin with stubMaxTurns (default 3)
+          Session.addDiscoveredTools(sessionID, [toolID], stubMaxTurns)
+
+          return {
+            title: `Tool Activated: ${toolID}`,
+            metadata: { activated: true, turnsRemaining: stubMaxTurns },
+            output: `TOOL ACTIVATED
+
+Tool: ${toolID}
+
+This tool has been auto-activated for the next ${stubMaxTurns} turn${stubMaxTurns === 1 ? "" : "s"}.
+
+To pin it permanently for this session, run:
+tool_search_regex({ pattern: "${toolID}", pin: true })
+
+Please retry your tool call with the correct parameters.`,
+          }
+        },
+      })
 
     const resolveTools = Effect.fn("SessionPrompt.resolveTools")(function* (input: {
       agent: Agent.Info
@@ -371,6 +398,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       const toolSearchEnabled = cfgInfo.toolSearch?.enabled ?? true
       const alwaysLoad = new Set(cfgInfo.toolSearch?.alwaysLoad ?? [])
       const maxTurns = cfgInfo.toolSearch?.maxTurns ?? 10
+      const stubMaxTurns = cfgInfo.toolSearch?.stubMaxTurns ?? 3
 
       // Restore pinned tools from DB (survive restarts), then tick expiry counters
       if (input.session.pinned_tools?.length) {
@@ -420,7 +448,15 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       })) {
         const catalogEntry = ToolCatalog.get(item.id)
         const isDeferred = catalogEntry?.deferLoading ?? false
-        if (toolSearchEnabled && isDeferred && !discoveredToolIDs.has(item.id) && !alwaysLoad.has(item.id)) continue
+        const isDiscovered = discoveredToolIDs.has(item.id)
+        const isAlwaysLoad = alwaysLoad.has(item.id)
+
+        // Inject stub for deferred tools that aren't discovered or always-loaded
+        if (toolSearchEnabled && isDeferred && !isDiscovered && !isAlwaysLoad) {
+          tools[item.id] = createActivationStub(item.id, item.description, input.session.id, stubMaxTurns)
+          continue
+        }
+
         const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))
         tools[item.id] = tool({
           description: item.description,
@@ -462,7 +498,20 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       for (const [key, item] of Object.entries(yield* mcp.tools())) {
         const mcpCatalogEntry = ToolCatalog.get(key)
         const mcpIsDeferred = mcpCatalogEntry?.deferLoading ?? true // MCP defaults to deferred
-        if (toolSearchEnabled && mcpIsDeferred && !discoveredToolIDs.has(key) && !alwaysLoad.has(key)) continue
+        const mcpIsDiscovered = discoveredToolIDs.has(key)
+        const mcpIsAlwaysLoad = alwaysLoad.has(key)
+
+        // Inject stub for deferred MCP tools that aren't discovered or always-loaded
+        if (toolSearchEnabled && mcpIsDeferred && !mcpIsDiscovered && !mcpIsAlwaysLoad) {
+          tools[key] = createActivationStub(
+            key,
+            item.description || `MCP tool: ${key}`,
+            input.session.id,
+            stubMaxTurns,
+          )
+          continue
+        }
+
         const execute = item.execute
         if (!execute) continue
 
