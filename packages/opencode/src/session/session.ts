@@ -38,7 +38,8 @@ export function addDiscoveredTools(sessionID: string, toolIDs: string[], maxTurn
   if (!discoveredToolsMap.has(sessionID)) discoveredToolsMap.set(sessionID, new Map())
   const map = discoveredToolsMap.get(sessionID)!
   for (const id of toolIDs) {
-    if (!map.has(id)) map.set(id, maxTurns)
+    // Always update if pinning (maxTurns=0), otherwise only add if not present
+    if (maxTurns === 0 || !map.has(id)) map.set(id, maxTurns)
   }
 }
 

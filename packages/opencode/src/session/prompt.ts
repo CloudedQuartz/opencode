@@ -354,7 +354,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     })
     const createActivationStub = (toolID: string, description: string, sessionID: string, stubMaxTurns: number) =>
       tool({
-        description: `${description}\n\nACTIVATION REQUIRED: This tool is not yet active. Call tool_search with query="${toolID}" or tool_search_regex with pattern="${toolID}" and pin=true to activate it for this session.`,
+        description: `${description.slice(0, 60)}${description.length > 60 ? '...' : ''} [ACTIVATION REQUIRED: Use tool_search_regex with pattern="${toolID}" and pin=true to activate.]`,
         inputSchema: jsonSchema({
           type: "object",
           properties: {},
@@ -369,13 +369,13 @@ NOTE: At any point in time through this workflow you should feel free to ask the
             output: `TOOL ACTIVATED
 
 Tool: ${toolID}
+${description}
 
-This tool has been auto-activated for the next ${stubMaxTurns} turn${stubMaxTurns === 1 ? "" : "s"}.
+Auto-activated for ${stubMaxTurns} turn${stubMaxTurns === 1 ? "" : "s"}.
 
-To pin it permanently for this session, run:
-tool_search_regex({ pattern: "${toolID}", pin: true })
+To pin permanently: tool_search_regex({ pattern: "${toolID}", pin: true })
 
-Please retry your tool call with the correct parameters.`,
+Please retry your tool call.`,
           }
         },
       })
