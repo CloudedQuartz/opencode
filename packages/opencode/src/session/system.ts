@@ -2,34 +2,36 @@ import { Context, Effect, Layer } from "effect"
 
 import { Instance } from "../project/instance"
 
-import PROMPT_ANTHROPIC from "./prompt/anthropic.txt"
-import PROMPT_DEFAULT from "./prompt/default.txt"
-import PROMPT_BEAST from "./prompt/beast.txt"
-import PROMPT_GEMINI from "./prompt/gemini.txt"
-import PROMPT_GPT from "./prompt/gpt.txt"
-import PROMPT_KIMI from "./prompt/kimi.txt"
+import PROMPT_BASE from "./prompt/base.txt"
+import OVERRIDE_ANTHROPIC from "./prompt/overrides/anthropic.txt"
+import OVERRIDE_DEFAULT from "./prompt/overrides/default.txt"
+import OVERRIDE_BEAST from "./prompt/overrides/beast.txt"
+import OVERRIDE_GEMINI from "./prompt/overrides/gemini.txt"
+import OVERRIDE_GPT from "./prompt/overrides/gpt.txt"
+import OVERRIDE_KIMI from "./prompt/overrides/kimi.txt"
 
-import PROMPT_CODEX from "./prompt/codex.txt"
-import PROMPT_TRINITY from "./prompt/trinity.txt"
+import OVERRIDE_CODEX from "./prompt/overrides/codex.txt"
+import OVERRIDE_TRINITY from "./prompt/overrides/trinity.txt"
 import type { Provider } from "@/provider"
 import type { Agent } from "@/agent/agent"
 import { Permission } from "@/permission"
 import { Skill } from "@/skill"
 
 export function provider(model: Provider.Model) {
+  const base = [PROMPT_BASE]
   if (model.api.id.includes("gpt-4") || model.api.id.includes("o1") || model.api.id.includes("o3"))
-    return [PROMPT_BEAST]
+    return [...base, OVERRIDE_BEAST]
   if (model.api.id.includes("gpt")) {
     if (model.api.id.includes("codex")) {
-      return [PROMPT_CODEX]
+      return [...base, OVERRIDE_CODEX]
     }
-    return [PROMPT_GPT]
+    return [...base, OVERRIDE_GPT]
   }
-  if (model.api.id.includes("gemini-")) return [PROMPT_GEMINI]
-  if (model.api.id.includes("claude")) return [PROMPT_ANTHROPIC]
-  if (model.api.id.toLowerCase().includes("trinity")) return [PROMPT_TRINITY]
-  if (model.api.id.toLowerCase().includes("kimi")) return [PROMPT_KIMI]
-  return [PROMPT_DEFAULT]
+  if (model.api.id.includes("gemini-")) return [...base, OVERRIDE_GEMINI]
+  if (model.api.id.includes("claude")) return [...base, OVERRIDE_ANTHROPIC]
+  if (model.api.id.toLowerCase().includes("trinity")) return [...base, OVERRIDE_TRINITY]
+  if (model.api.id.toLowerCase().includes("kimi")) return [...base, OVERRIDE_KIMI]
+  return [...base, OVERRIDE_DEFAULT]
 }
 
 export interface Interface {
